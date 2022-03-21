@@ -13,22 +13,82 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+# Hoja de Trabajo No. 5:
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Como continuación a las hojas de trabajo anteriores, trabajaremos repartiendo los datos en un 70% para entrenamiento y 30% para prueba y se clasificará los precios de las casas en 3, que es lo que se busca predecir.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+### 1. Use los mismos conjuntos de entrenamiento y prueba que utilizó en las dos hojas anteriores. 
 
-```{r cars}
-summary(cars)
+```{r warning=FALSE, unload=TRUE}
+#Librerias a utilizar
+library(e1071)
+library(caret)
+library(magrittr)
+library(plyr)
+library(dplyr)
+library(cluster)
+library(mclust)
+library(fpc)
+library(NbClust)
+library(factoextra)
+library(readr)
+library(ppclust)
+library(randomForest)
+library(ggplot2)
+library(broom)
+library(ggpubr)
+library(corrplot)
+library(mctest)
+library(Amelia)
+library(caretEnsemble)
+library(psych)
+library(mice)
+library(GGally)
+library(rpart)
+#base de datos a utilzar
+datos <- read.csv("train.csv")
+datosCasas <- datos[,-c(1,7)]
 ```
 
-## Including Plots
+###  2. Elabore un modelo de bayes ingenuo (naive bayes) utilizando el conjunto de entrenamiento y explique los resultados a los que llega. El experimento debe ser reproducible por lo que debe fijar que los conjuntos de entrenamiento y prueba sean los mismos siempre que se ejecute el código. 
 
-You can also embed plots, for example:
+### 3. El modelo debe ser de clasificación, use la variable categórica que hizo con el precio de las casas (barata, media y cara) como variable respuesta. 
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r, echo=FALSE}
+
+getmode <- function(v){
+  v=v[nchar(as.character(v))>0]
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+for (cols in colnames(datosCasas)) {
+  if (cols %in% names(datosCasas[,sapply(datosCasas, is.numeric)])) {
+    datosCasas<-datosCasas%>%mutate(!!cols := replace(!!rlang::sym(cols), is.na(!!rlang::sym(cols)), mean(!!rlang::sym(cols), na.rm=TRUE)))
+  }
+  else {
+    datosCasas<-datosCasas%>%mutate(!!cols := replace(!!rlang::sym(cols), !!rlang::sym(cols)=="", getmode(!!rlang::sym(cols))))
+  }
+}
+datosCasas <- datosCasas[,-29]
+datosCasas <- datosCasas[,-29]
+datosCasas <- datosCasas[,-29]
+datosCasas <- datosCasas[,-29]
+datosCasas <- datosCasas[,-30]
+datosCasas <- datosCasas[,-24]
+datosCasas <- datosCasas[,-50]
+#View(datosCasas)
+porciento <- 70/100
+#variable que clasifica las casas
+datosCasas$clasificacion <- ifelse(datosCasas$SalePrice <= 251000, "Economicas", ifelse(datosCasas$SalePrice <= 538000, "Intermedias", ifelse(datosCasas$SalePrice <= 755000, "Caras")))
+datosCasas$y <- factor(datosCasas$clasificacion)
+set.seed(123)
+trainRowsNumber<-sample(nrow(datosCasas),porciento*nrow(datosCasas))
+train<-datosCasas[trainRowsNumber,]
+test<-datosCasas[-trainRowsNumber,]
+#modelo de naivebayes
+modelo<-naiveBayes(train$y~., data=train)
+modelo
 ```
+Con esto puede observarse que las probabilidades a priori obtenidas son: caras 0.4897%, economicas 85.01% e intermedias 14.50%.
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Es decir, la mayoría de casas se encuentra en un rango de precio de venta económico, seguido por las casas con un precio de venta intermedio y por último se encuentran aquellas con un precio de venta elevado.
