@@ -92,3 +92,41 @@ modelo
 Con esto puede observarse que las probabilidades a priori obtenidas son: caras 0.4897%, economicas 85.01% e intermedias 14.50%.
 
 Es decir, la mayoría de casas se encuentra en un rango de precio de venta económico, seguido por las casas con un precio de venta intermedio y por último se encuentran aquellas con un precio de venta elevado.
+
+
+```{r}
+prediction <- predict(modelo, test)
+prediction
+
+```
+
+Se realiza la prediccion empleando el modelo y set de prueba para la evaluacion de eficiencia del algoritmo. 
+
+
+```{r}
+library(caret)
+
+cfm <- confusionMatrix(prediction,as.factor(test$clasificacion))
+cfm
+
+```
+
+Basado en la matriz de confusion realizada a partir de la prediccion y el set de prueba, la precision del modelo
+para realizar predicciones de 0.8656 o 86.56%. El modelo presenta sensibilidad, especificidad y exactitud balanceda,
+aceptables para la clasificacion de caras y economicas, sin embargo en la clasificacion de economicas estos indicadores
+presentan menor eficiencia. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
